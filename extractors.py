@@ -5,7 +5,7 @@ class FeatureExtractor():
 		raise NotImplementedError
 
 
-class BasicFeatureExtracter(FeatureExtractor):
+class BasicFeatureExtractor(FeatureExtractor):
 	def getFeatures(state, action):
 		"""
 			state is a dictionary of the current portfolio and market information.

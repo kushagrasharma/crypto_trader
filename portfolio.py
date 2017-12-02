@@ -7,6 +7,7 @@ class Portfolio():
 		self.funds = funds
 		self.bitcoin = bitcoin
 		self.history = []
+		self.assets_at_buy = None
 
 	def getCurrentState(self):
 		""" 
@@ -21,6 +22,7 @@ class Portfolio():
 			"market" : self.market,
 			"funds" : self.funds,
 			"bitcoin" : self.bitcoin,
+			"assets_at_buy" : self.assets_at_buy,
 			"total_in_usd" : self.funds + self.bitcoin * self.market.getCurrentMarketInfo()["weighted_price"]
 		}
 		return portfolioInfo
@@ -52,7 +54,9 @@ class Portfolio():
 			return False
 		self.funds -= marketInfo["weighted_price"] * bitcoin
 		self.bitcoin += bitcoin
-		self.history.append(["buy", bitcoin])
+		state = self.getCurrentState()
+		self.assets_at_buy = state["total_in_usd"]
+		self.history.append(["buy", bitcoin, state["total_in_usd"]])
 		self.market.incrementTime()
 		return True
 
@@ -62,13 +66,15 @@ class Portfolio():
 		marketInfo = self.market.getCurrentMarketInfo()
 		self.bitcoin -= bitcoin
 		self.funds += bitcoin * marketInfo["weighted_price"]
-		self.history.append(["sell", -1 * bitcoin])
+		state = self.getCurrentState()
+		self.history.append(["sell", -1 * bitcoin, state["total_in_usd"]])
 		self.market.incrementTime()
 		return True
 
 	def hold(self):
 		self.market.incrementTime()
-		self.history.append(["hold", 0])
+		state = self.getCurrentState()
+		self.history.append(["hold", 0, state["total_in_usd"]])
 		return True
 
 	def reset(self, upperbound):
@@ -77,4 +83,5 @@ class Portfolio():
 		"""
 		self.funds = self.originalFunds
 		self.bitcoin = 0
+		self.history = []
 		self.market.setSampledTimestamp(upperbound)

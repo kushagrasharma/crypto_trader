@@ -2,12 +2,15 @@ from portfolio import Portfolio
 from util import Counter
 from extractors import *
 
-
 class ApproximateQAgent():
     def __init__(self, funds=10000, featExtractor=BasicFeatureExtractor(), alpha=1.0, epsilon=0.05, gamma=0.8, numTraining = 10):
         self.featExtractor = featExtractor
         self.weights = util.Counter()
         self.portfolio = Portfolio(funds)
+
+        self.discount = gamma
+        self.epsilon = epsilon
+        self.alpha = alpha
 
     def getWeights(self):
         return self.weights
@@ -46,6 +49,9 @@ class ApproximateQAgent():
             return 0.0
         return max([self.getQValue(state, action) for action in actions])
 
+    def getLegalActions(self, state):
+        return self.market.getLegalActions(state)
+
     def getAction(self, state):
         """
           Compute the action to take in the current state.  With
@@ -64,12 +70,6 @@ class ApproximateQAgent():
         if util.flipCoin(self.epsilon):
             return random.choice(legalActions)
         return self.computeActionFromQValues(state)
-
-    def getLegalActions(self, state):
-        if state["num_bitcoins"] == 0:
-            return ["hold", "buy"]
-        else:
-            return ["hold", "sell"]
 
     def getValue(self, state):
         return self.computeValueFromQValues(state)
