@@ -69,6 +69,27 @@ class Try1(FeatureExtractor):
 			"10": market["weighted_price"] - pastDay["weighted_price"]
 		}
 
+class Try2(FeatureExtractor):
+	def getFeatures(self, state, action):
+		market = state["market"].getCurrentMarketInfo()
+		pastHour = state["market"].getPastMarketInfo(4)
+		pastDay = state["market"].getPastMarketInfo(4*24)
+		return {
+			"1" : market.rsi,
+			"2" : market.willr,
+			"3" : market.dema,
+			"4" : market.chaikinOscillator,
+			"5" : market.chaikinLine,
+			"6" : market.trueRange,
+			"7" : market.linearRegSlope,
+			"8" : {"buy" : 3, "hold" : 2, "sell" : 1}[action],
+			"9": market["weighted_price"] - past15["weighted_price"],
+			"10": market["weighted_price"] - pastDay["weighted_price"],
+			"11" : market.std,
+			"12" : market.tsf,
+		}
+
+
 """
 def willr(state, action):
 	"""
