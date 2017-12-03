@@ -1,7 +1,7 @@
 import pandas as pd
 import random
 import math
-
+import datetime
 from copy import copy, deepcopy
 
 def dateparse (time_in_secs):    
@@ -11,8 +11,8 @@ def dateparse (time_in_secs):
 class BitcoinMarket():
 	def __init__(self, fileName="coinbaseUSD_1-min_data_2014-12-01_to_2017-10-20.csv"):
 		self.marketData = pd.read_csv(fileName, parse_dates=True,date_parser=dateparse, index_col='Timestamp') 
-		df.reset_index(level=0, inplace=True)
-		df.columns = ['timestamp', 'open', 'high', 'low', 'close', 'volume_btc', 'volume_currency', 'weighted_price']
+		self.marketData.reset_index(level=0, inplace=True)
+		self.marketData.columns = ['timestamp', 'open', 'high', 'low', 'close', 'volume_btc', 'volume_currency', 'weighted_price']
 		self.curTimestamp = 1
 		self.numTimestamps = len(self.marketData)
 
