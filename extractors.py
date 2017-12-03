@@ -24,17 +24,13 @@ class BasicFeatureExtractor(FeatureExtractor):
 		    	- total
 		"""
 		market = state["market"].getCurrentMarketInfo()
+		past = state["market"].getPastMarketInfo(5)
 		features = {
-			"high": market["high"],
-			"low": market["low"],
-			"open": market["open"],
-			"close": market["close"],
-			"volume_btc": market["volume_btc"],
-			"volume_currency": market["volume_currency"],
-			"weighted_price": market["weighted_price"],
-			"funds": state["funds"],
-			"bitcoin": state["bitcoin"],
-			"total_in_usd": state["total_in_usd"],
+			# "volatility": market["high"] - market["low"],
+			# "volume_btc": market["volume_btc"],
+			# "volume_currency": market["volume_currency"],
+			"weighted_price": market["weighted_price"] - past["weighted_price"],
+			"action": {"buy" : 3, "hold" : 2, "sell" : 1}[action]
 		}
 		return features
 

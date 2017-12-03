@@ -9,9 +9,9 @@ class ApproximateQAgent():
     def __init__(self, 
                  funds=10000, 
                  featExtractor=BasicFeatureExtractor(), 
-                 alpha=0.10, 
+                 alpha=1.00, 
                  epsilon=0.05, 
-                 gamma=0.2, 
+                 gamma=0.98, 
                  trainingDataBound=0.8,
                  stepsPerEpisode=1440,
                  rewardFunction=reward):
@@ -97,7 +97,7 @@ class ApproximateQAgent():
         if not actions:
             return None
         qValueActionPairs = [(action, self.getQValue(state, action)) for action in actions]
-        print qValueActionPairs
+        #print qValueActionPairs
         maxActions = []
         maxQValue = -sys.maxint
         for action, qValue in qValueActionPairs:
@@ -106,7 +106,7 @@ class ApproximateQAgent():
             elif qValue > maxQValue:
                 maxActions = [action]
                 maxQValue = qValue
-        print maxActions
+        #print maxActions
         return random.choice(maxActions)
 
     def getValue(self, state):
@@ -124,9 +124,10 @@ class ApproximateQAgent():
         for i in range(self.stepsPerEpisode):
             state = self.portfolio.getCurrentState()
             action = self.getAction(state)
+            #print action
             self.portfolio.takeAction(action)
             nextState = self.portfolio.getCurrentState()
-            reward = self.rewardFunction(state, action)
+            reward = self.rewardFunction(state, action, nextState)
             self.update(state, action, nextState, reward)
         self.episodes.append(self.portfolio.getHistory())
         return getDelta(self.episodes[-1])
