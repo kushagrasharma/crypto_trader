@@ -2,21 +2,21 @@ from portfolio import Portfolio
 from util import *
 from extractors import *
 from reward import *
-
+import json
 import sys
 
 class ApproximateQAgent():
     def __init__(self, 
                  funds=10000, 
-                 featExtractor=BasicFeatureExtractor(), 
+                 featExtractor=Try1(), 
                  alpha=1.00, 
                  epsilon=0.05, 
                  gamma=0.98, 
                  trainingDataBound=0.8,
-                 stepsPerEpisode=1440,
-                 rewardFunction=reward):
+                 stepsPerEpisode=720,
+                 rewardFunction=reward, weights = Counter()):
         self.featExtractor = featExtractor
-        self.weights = Counter()
+        self.weights = weights
         self.portfolio = Portfolio(funds)
 
         self.rewardFunction = rewardFunction
@@ -26,6 +26,7 @@ class ApproximateQAgent():
         self.epsilon = epsilon
         self.alpha = alpha
         self.episodes = []
+        print self.weights
 
     def getWeights(self):
         return self.weights
@@ -55,7 +56,8 @@ class ApproximateQAgent():
         difference = reward + self.discount * self.getValue(nextState) - self.getQValue(state, action)
         features = self.featExtractor.getFeatures(state, action)
         for key in features:
-            self.weights[key] += self.alpha * difference * features[key] 
+            self.weights[key] += self.alpha * difference * features[key]
+            self.weights[key] *= .001
 
     def computeValueFromQValues(self, state):
         """
@@ -133,7 +135,9 @@ class ApproximateQAgent():
             #print action
             self.portfolio.takeAction(action)
             nextState = self.portfolio.getCurrentState()
-            reward = self.rewardFunction(state, action, nextState)
+            reward = self.rewardFunction(self.portfolio.history)#state, action, nextState)
             self.update(state, action, nextState, reward)
         self.episodes.append(self.portfolio.getHistory())
+        with open('weights.json', 'w') as f:
+            json.dump(self.weights, f)
         return getDelta(self.episodes[-1]), self.portfolio.getCurrentState()["total_in_usd"]

@@ -1,6 +1,10 @@
 from qlearningAgents import ApproximateQAgent
+import json
 
-q = ApproximateQAgent()
+with open('weights.json') as json_data:
+    weights = json.load(json_data)
+
+q = ApproximateQAgent(weights=weights)
 
 
 for i in range(50):

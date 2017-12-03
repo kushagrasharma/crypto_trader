@@ -1,4 +1,4 @@
-
+import pandas as pd
 
 class FeatureExtractor():
 	def getFeatures(state, action):
@@ -33,7 +33,7 @@ class BasicFeatureExtractor(FeatureExtractor):
 			"delta_15_minutes": market["weighted_price"] - past15["weighted_price"],
 			"delta_24_hours": market["weighted_price"] - pastDay["weighted_price"],
 			"willr" : (market["high"] - market["close"]) / (market["high"] - market["low"]) * 100,
-			"action": {"buy" : 3, "hold" : 2, "sell" : 1}[action],
+			"action": {"buy" : 3, "hold" : 2, "sell" : 1}[action]
 		}
 		return features
 
@@ -50,6 +50,9 @@ class MarketFeatureExtractor(FeatureExtractor):
 
 class Try1(FeatureExtractor):
 	def getFeatures(self, state, action):
+		market = state["market"].getCurrentMarketInfo()
+		past15 = state["market"].getPastMarketInfo(15)
+		pastDay = state["market"].getPastMarketInfo(1440)
 		return {
 			"1" : willr(state, action),
 			"2" : rocr(state, action, 15),
@@ -59,6 +62,8 @@ class Try1(FeatureExtractor):
 			"6" : momentum(state, action, 60),
 			"7" : momentum(state, action, 1440),
 			"8" : {"buy" : 3, "hold" : 2, "sell" : 1}[action],
+			"9": market["weighted_price"] - past15["weighted_price"],
+			"10": market["weighted_price"] - pastDay["weighted_price"]
 		}
 
 
