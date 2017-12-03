@@ -8,7 +8,7 @@ import sys
 class ApproximateQAgent():
     def __init__(self, 
                  funds=10000, 
-                 featExtractor=Try1(), 
+                 featExtractor=Try2(), 
                  alpha=1.00, 
                  epsilon=0.05, 
                  gamma=0.98, 

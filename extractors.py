@@ -83,51 +83,51 @@ class Try2(FeatureExtractor):
 			"6" : market.trueRange,
 			"7" : market.linearRegSlope,
 			"8" : {"buy" : 3, "hold" : 2, "sell" : 1}[action],
-			"9": market["weighted_price"] - past15["weighted_price"],
+			"9": market["weighted_price"] - pastHour["weighted_price"],
 			"10": market["weighted_price"] - pastDay["weighted_price"],
 			"11" : market.std,
 			"12" : market.tsf,
 		}
 
 
-"""
-def willr(state, action):
-	"""
-		#Determines where today's closing price fell within the range on past 10-day's transaction. 
-	"""
-	market = state["market"]
-	cur = market.getCurrentMarketInfo()
-	past = [market.getPastMarketInfo(i) for i in range(10)]
-	high = max([x["high"] for x in past])
-	low = min([x["low"] for x in past])
-	if high - low == 0:
-		return 0
-	return (high - cur["close"]) / (high - low) * 100
+# """
+# def willr(state, action):
+# 	"""
+# 		#Determines where today's closing price fell within the range on past 10-day's transaction. 
+# 	"""
+# 	market = state["market"]
+# 	cur = market.getCurrentMarketInfo()
+# 	past = [market.getPastMarketInfo(i) for i in range(10)]
+# 	high = max([x["high"] for x in past])
+# 	low = min([x["low"] for x in past])
+# 	if high - low == 0:
+# 		return 0
+# 	return (high - cur["close"]) / (high - low) * 100
 
-def rocr(state, action, n):
-	"""
-		#Compute rate of change relative to previous trading intervals
-	"""
-	market = state["market"].getCurrentMarketInfo()
-	pastN = state["market"].getPastMarketInfo(n)
-	return (market["weighted_price"] / pastN["weighted_price"]) * 100
+# def rocr(state, action, n):
+# 	"""
+# 		#Compute rate of change relative to previous trading intervals
+# 	"""
+# 	market = state["market"].getCurrentMarketInfo()
+# 	pastN = state["market"].getPastMarketInfo(n)
+# 	return (market["weighted_price"] / pastN["weighted_price"]) * 100
 
-def momentum(state, action, n):
-	"""
-		#Measures the change in price
-	"""
-	market = state["market"]
-	cur = market.getCurrentMarketInfo()
-	past = market.getPastMarketInfo(n)
-	return cur["weighted_price"] - past["weighted_price"]
+# def momentum(state, action, n):
+# 	"""
+# 		#Measures the change in price
+# 	"""
+# 	market = state["market"]
+# 	cur = market.getCurrentMarketInfo()
+# 	past = market.getPastMarketInfo(n)
+# 	return cur["weighted_price"] - past["weighted_price"]
 
-def RSI_self(state, window_length=14, libr=False):
-	pasts = []
-	for i in range(window_length, 0, -1):
-		pasts.append(state["market"].getPastMarketInfo(1440*i).close)
-	pasts.append(state['market'].getCurrentMarketInfo().close)
-	return RSI(pd.DataFrame(pasts, index=np.arange(len(pasts)), columns=['close']), timeperiod=window_length).iloc[-1]
-"""
+# def RSI_self(state, window_length=14, libr=False):
+# 	pasts = []
+# 	for i in range(window_length, 0, -1):
+# 		pasts.append(state["market"].getPastMarketInfo(1440*i).close)
+# 	pasts.append(state['market'].getCurrentMarketInfo().close)
+# 	return RSI(pd.DataFrame(pasts, index=np.arange(len(pasts)), columns=['close']), timeperiod=window_length).iloc[-1]
+# """
 def aggregate(data):
     data.sort_values('timestamp')
     agged = {'timestamp' : data.iloc[0].timestamp, 

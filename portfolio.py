@@ -101,6 +101,6 @@ class Portfolio():
 		self.funds = self.originalFunds
 		self.bitcoin = 0
 		self.history = []
-		self.market.setSampledTimestamp(upperbound)
+		self.market.setSampledTimestamp(0, upperbound)
 		self.initial_bitcoin_price = self.market.getCurrentMarketInfo()["weighted_price"]
 
