@@ -42,10 +42,14 @@ class ApproximateQAgent():
             try:
                 value += features[key] * self.weights[key]
             except:
+                pass
+                print "KEY"
                 print key
+                print "FEATURES"
                 print features
+                print "WEIGHTS"
                 print self.weights
-                raise RuntimeError
+                return
         return value
 
     def update(self, state, action, nextState, reward):
