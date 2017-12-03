@@ -1,13 +1,14 @@
 from market import BitcoinMarket
 
 class Portfolio():
-	def __init__(self, funds=10000, bitcoin=0):
+	def __init__(self, funds=1000, bitcoin=0):
 		self.market = BitcoinMarket()
 		self.originalFunds = funds
 		self.funds = funds
 		self.bitcoin = bitcoin
 		self.history = []
 		self.assets_at_buy = None
+		self.initial_bitcoin_price = self.market.getCurrentMarketInfo()["weighted_price"]
 
 	def getCurrentState(self):
 		""" 
@@ -23,7 +24,8 @@ class Portfolio():
 			"funds" : self.funds,
 			"bitcoin" : self.bitcoin,
 			"assets_at_buy" : self.assets_at_buy,
-			"total_in_usd" : self.funds + self.bitcoin * self.market.getCurrentMarketInfo()["weighted_price"]
+			"total_in_usd" : self.funds + self.bitcoin * self.market.getCurrentMarketInfo()["weighted_price"],
+			"initial_bitcoin_price" : self.initial_bitcoin_price,
 		}
 		return portfolioInfo
 
@@ -42,32 +44,34 @@ class Portfolio():
 	def takeAction(self, action):
 		# TODO fix these values
 		if action == "buy":
-			return self.buy(1)
+			return self.buy()
 		elif action == "sell":
-			return self.sell(1)
+			return self.sell()
 		elif action == "hold":
 			return self.hold()
 
-	def buy(self, bitcoin):
+	def buy(self):
 		marketInfo = self.market.getCurrentMarketInfo()
-		if marketInfo["weighted_price"] * bitcoin > self.funds:
+		if self.funds == 0:
 			return False
-		self.funds -= marketInfo["weighted_price"] * bitcoin
-		self.bitcoin += bitcoin
+		bitcoin = self.bitcoin
+		self.bitcoin = self.funds / marketInfo["weighted_price"]
+		self.funds = 0
 		state = self.getCurrentState()
 		self.assets_at_buy = state["total_in_usd"]
 		self.history.append(["buy", bitcoin, state["total_in_usd"]])
 		self.market.incrementTime()
 		return True
 
-	def sell(self, bitcoin):
-		if bitcoin > self.bitcoin:
+	def sell(self):
+		if self.bitcoin == 0:
 			return False
 		marketInfo = self.market.getCurrentMarketInfo()
-		self.bitcoin -= bitcoin
-		self.funds += bitcoin * marketInfo["weighted_price"]
+		bitcoin = self.bitcoin
+		self.funds += self.bitcoin * marketInfo["weighted_price"]
+		self.bitcoin -= 0
 		state = self.getCurrentState()
-		self.history.append(["sell", -1 * bitcoin, state["total_in_usd"]])
+		self.history.append(["sell", bitcoin, state["total_in_usd"]])
 		self.market.incrementTime()
 		return True
 
@@ -85,3 +89,5 @@ class Portfolio():
 		self.bitcoin = 0
 		self.history = []
 		self.market.setSampledTimestamp(upperbound)
+		self.initial_bitcoin_price = self.market.getCurrentMarketInfo()["weighted_price"]
+

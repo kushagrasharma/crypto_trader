@@ -1,16 +1,31 @@
 from portfolio import Portfolio
-from util import Counter
+from util import *
 from extractors import *
+from reward import *
+
+import sys
 
 class ApproximateQAgent():
-    def __init__(self, funds=10000, featExtractor=BasicFeatureExtractor(), alpha=1.0, epsilon=0.05, gamma=0.8, numTraining = 10):
+    def __init__(self, 
+                 funds=10000, 
+                 featExtractor=BasicFeatureExtractor(), 
+                 alpha=0.10, 
+                 epsilon=0.05, 
+                 gamma=0.2, 
+                 trainingDataBound=0.8,
+                 stepsPerEpisode=1440,
+                 rewardFunction=reward):
         self.featExtractor = featExtractor
-        self.weights = util.Counter()
+        self.weights = Counter()
         self.portfolio = Portfolio(funds)
 
+        self.rewardFunction = rewardFunction
+        self.trainingDataBound = trainingDataBound
+        self.stepsPerEpisode = stepsPerEpisode
         self.discount = gamma
         self.epsilon = epsilon
         self.alpha = alpha
+        self.episodes = []
 
     def getWeights(self):
         return self.weights
@@ -50,7 +65,7 @@ class ApproximateQAgent():
         return max([self.getQValue(state, action) for action in actions])
 
     def getLegalActions(self, state):
-        return self.market.getLegalActions(state)
+        return self.portfolio.getLegalActions(state)
 
     def getAction(self, state):
         """
@@ -67,10 +82,56 @@ class ApproximateQAgent():
         legalActions = self.getLegalActions(state)
         if not legalActions:
             return None
-        if util.flipCoin(self.epsilon):
+        if flipCoin(self.epsilon):
             return random.choice(legalActions)
         return self.computeActionFromQValues(state)
 
+    def computeActionFromQValues(self, state):
+        """
+          Compute the best action to take in a state.  Note that if there
+          are no legal actions, which is the case at the terminal state,
+          you should return None.
+        """
+        "*** YOUR CODE HERE ***"
+        actions = self.getLegalActions(state)
+        if not actions:
+            return None
+        qValueActionPairs = [(action, self.getQValue(state, action)) for action in actions]
+        print qValueActionPairs
+        maxActions = []
+        maxQValue = -sys.maxint
+        for action, qValue in qValueActionPairs:
+            if qValue == maxQValue:
+                maxActions.append(action)
+            elif qValue > maxQValue:
+                maxActions = [action]
+                maxQValue = qValue
+        print maxActions
+        return random.choice(maxActions)
+
     def getValue(self, state):
         return self.computeValueFromQValues(state)
+
+    def runEpisode(self):
+        def getDelta(history):
+            state = self.portfolio.getCurrentState()
+            portfolioDelta = (history[-1][2] - history[0][2]) / history[0][2]
+            bitcoinDelta = (state["market"].getCurrentMarketInfo()["weighted_price"] - state["initial_bitcoin_price"]) / state["initial_bitcoin_price"]
+            return portfolioDelta - bitcoinDelta
+
+
+        self.portfolio.reset(self.trainingDataBound)
+        for i in range(self.stepsPerEpisode):
+            state = self.portfolio.getCurrentState()
+            action = self.getAction(state)
+            self.portfolio.takeAction(action)
+            nextState = self.portfolio.getCurrentState()
+            reward = self.rewardFunction(state, action)
+            self.update(state, action, nextState, reward)
+        self.episodes.append(self.portfolio.getHistory())
+        return getDelta(self.episodes[-1])
+
+
+
+
 

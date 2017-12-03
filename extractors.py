@@ -6,7 +6,7 @@ class FeatureExtractor():
 
 
 class BasicFeatureExtractor(FeatureExtractor):
-	def getFeatures(state, action):
+	def getFeatures(self, state, action):
 		"""
 			state is a dictionary of the current portfolio and market information.
 			Available fields include:
@@ -23,17 +23,18 @@ class BasicFeatureExtractor(FeatureExtractor):
 		    	- num_bitcoins
 		    	- total
 		"""
+		market = state["market"].getCurrentMarketInfo()
 		features = {
-			"high": state["high"],
-			"low": state["low"],
-			"open": state["open"],
-			"close": state["close"],
-			"volume_btc": state["volume_btc"],
-			"volume_currency": state["volume_currency"],
-			"weighted_price": state["weighted_price"],
+			"high": market["high"],
+			"low": market["low"],
+			"open": market["open"],
+			"close": market["close"],
+			"volume_btc": market["volume_btc"],
+			"volume_currency": market["volume_currency"],
+			"weighted_price": market["weighted_price"],
 			"funds": state["funds"],
-			"num_bitcoins": state["num_bitcoins"],
-			"total": state["total"],
+			"bitcoin": state["bitcoin"],
+			"total_in_usd": state["total_in_usd"],
 		}
 		return features
 
