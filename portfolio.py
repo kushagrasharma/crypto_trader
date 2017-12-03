@@ -17,7 +17,9 @@ class Portfolio():
 	    	- market (BitcoinMarket object)
 	    	- funds
 	    	- bitcoin
+	    	- assets_at_buy
 	    	- total_in_usd
+	    	- initial_bitcoin_price
 		"""
 		portfolioInfo = {
 			"market" : self.market,
@@ -42,7 +44,9 @@ class Portfolio():
 		return self.history
 
 	def takeAction(self, action):
-		# TODO fix these values
+		"""
+			Given a string indicating an action, this takes the respective action
+		"""
 		if action == "buy":
 			return self.buy()
 		elif action == "sell":
@@ -51,6 +55,9 @@ class Portfolio():
 			return self.hold()
 
 	def buy(self):
+		"""
+			Buys all bitcoin and increments time one step
+		"""
 		marketInfo = self.market.getCurrentMarketInfo()
 		if self.funds == 0:
 			return False
@@ -64,6 +71,9 @@ class Portfolio():
 		return True
 
 	def sell(self):
+		"""
+			Sells all bitcoin and increments time one step
+		"""
 		if self.bitcoin == 0:
 			return False
 		marketInfo = self.market.getCurrentMarketInfo()
@@ -76,6 +86,9 @@ class Portfolio():
 		return True
 
 	def hold(self):
+		"""
+			Holds portfolio the same and increments time one step
+		"""
 		self.market.incrementTime()
 		state = self.getCurrentState()
 		self.history.append(["hold", 0, state["total_in_usd"]])
