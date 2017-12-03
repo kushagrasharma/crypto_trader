@@ -38,7 +38,13 @@ class ApproximateQAgent():
         features = self.featExtractor.getFeatures(state, action)
         value = 0
         for key in features:
-            value += features[key] * self.weights[key]
+            try:
+                value += features[key] * self.weights[key]
+            except:
+                print key
+                print features
+                print self.weights
+                raise RuntimeError
         return value
 
     def update(self, state, action, nextState, reward):
@@ -98,8 +104,8 @@ class ApproximateQAgent():
             return None
         qValueActionPairs = [(action, self.getQValue(state, action)) for action in actions]
         #print qValueActionPairs
-        maxActions = []
-        maxQValue = -sys.maxint
+        maxActions = [qValueActionPairs[0][0]]
+        maxQValue = qValueActionPairs[0][1]
         for action, qValue in qValueActionPairs:
             if qValue == maxQValue:
                 maxActions.append(action)
@@ -130,9 +136,4 @@ class ApproximateQAgent():
             reward = self.rewardFunction(state, action, nextState)
             self.update(state, action, nextState, reward)
         self.episodes.append(self.portfolio.getHistory())
-        return getDelta(self.episodes[-1])
-
-
-
-
-
+        return getDelta(self.episodes[-1]), self.portfolio.getCurrentState()["total_in_usd"]
