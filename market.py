@@ -46,8 +46,10 @@ class BitcoinMarket():
 		"""
 			lower and upperbound are decimals (i.e. 0.8 to sample from the first 80% of timestamps)
 		"""
-		self.curTimestamp = np.random.randint(math.ceil(self.numTimestamps * lowerbound), math.floor(self.numTimestamps * upperbound))
-		print self.curTimestamp
+		if lowerbound == upperbound:
+			self.curTimestamp = math.ceil(self.numTimestamps * lowerbound)
+		else:
+			self.curTimestamp = np.random.randint(math.ceil(self.numTimestamps * lowerbound), math.floor(self.numTimestamps * upperbound))
 		return self.curTimestamp
 
 	def incrementTime(self):

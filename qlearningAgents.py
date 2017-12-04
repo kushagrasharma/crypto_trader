@@ -7,6 +7,7 @@ import json
 import sys
 import pickle
 
+# seed the random number generator so that we can duplicate the results
 np.random.seed(1337)
 
 class ApproximateQAgent():
@@ -15,18 +16,18 @@ class ApproximateQAgent():
                  featExtractor=Try2(), 
                  alpha=0.5, 
                  epsilon=0.05, # initial episolon value
-                 gamma=0.95, # discount rate
-                 trainingDataBound=0.8,
+                 gamma=0.90, # discount rate
+                 trainingDataBound=0.90,
                  stepsPerEpisode=288, # 3-day period
                  rewardFunction=reward,
                  weights=None):
         self.featExtractor = featExtractor
         self.portfolio = Portfolio(funds)
-        if weights == None:
-            numFeatures = len(self.featExtractor.getFeatures(self.portfolio.getCurrentState(), "hold"))
-            self.weights = np.zeros(numFeatures)
-        else:
-            self.weights = weights
+        # if not weights:
+        #     numFeatures = len(self.featExtractor.getFeatures(self.portfolio.getCurrentState(), "hold"))
+        #     self.weights = np.zeros(numFeatures)
+        # else:
+        self.weights = weights
 
         self.rewardFunction = rewardFunction
         self.trainingDataBound = trainingDataBound
@@ -54,7 +55,8 @@ class ApproximateQAgent():
         difference = reward + self.discount * self.getValue(nextState) - self.getQValue(state, action)
         features = self.featExtractor.getFeatures(state, action)
         self.weights += self.alpha * difference * features
-        self.weights /= np.mean(self.weights)
+        if np.mean(self.weights) > 0:
+            self.weights /= np.mean(self.weights)
 
     def computeValueFromQValues(self, state):
         """
@@ -82,7 +84,7 @@ class ApproximateQAgent():
         legalActions = self.getLegalActions(state)
         if not legalActions:
             return None
-        if flipCoin(self.epsilon):
+        if self.epsilon != 0 and flipCoin(self.epsilon):
             return np.random.choice(legalActions)
         return self.computeActionFromQValues(state)
 
@@ -112,13 +114,14 @@ class ApproximateQAgent():
     def runEpisode(self):
         def getDelta(history):
             state = self.portfolio.getCurrentState()
-            portfolioDelta = (history[-1][2] - history[0][2]) / history[0][2]
-            bitcoinDelta = (state["market"].getCurrentMarketInfo()["weighted_price"]-state["initial_bitcoin_price"]) / state["initial_bitcoin_price"]
-            return bitcoinDelta, portfolioDelta, portfolioDelta - bitcoinDelta
-        try:
+            pChange = history[-1][2] - history[0][2]
+            portfolioDelta = (pChange) / history[0][2]
+            bChange = state["market"].getCurrentMarketInfo()["weighted_price"]-state["initial_bitcoin_price"]
+            bitcoinDelta = (bChange) / state["initial_bitcoin_price"]
+            return bitcoinDelta, portfolioDelta, portfolioDelta - bitcoinDelta, pChange, bChange, state["initial_bitcoin_price"],
 
         # randomly select a starting point in the training data
-        self.portfolio.reset(0, self.trainingDataBound)
+        self.portfolio.reset(0.5, self.trainingDataBound)
 
         for i in range(self.stepsPerEpisode):
             state = self.portfolio.getCurrentState()
@@ -131,15 +134,63 @@ class ApproximateQAgent():
             reward = self.rewardFunction(state, nextState)
             self.update(state, action, nextState, reward)
         self.episodes.append(self.portfolio.getHistory())
-        with open('history.log', 'a+') as f:
-            delta = getDelta(self.episodes[-1])
-            f.write("{},{},{},{}\n".format(delta[0], delta[1], delta[2], self.portfolio.getCurrentState()["total_in_usd"]))
+        # decrement epsilon as we progress in training
+        # self.epsilon *= 0.9
+        print self.weights
 
-        with open('weights.txt', 'w') as f:
+        # log data
+        with open('results/train.log', 'a+') as f:
+            delta = getDelta(self.episodes[-1])
+            f.write("{},{},{},{},{},{},{}\n".format(delta[0], delta[1], delta[2], delta[3], delta[4], delta[5], self.portfolio.getCurrentState()["total_in_usd"]))
+
+        with open('results/weights.txt', 'w') as f:
             pickle.dump(self.weights, f)
+        self.weights.tofile('results/weight_history.csv',sep=',',format='%10.5f')
         return getDelta(self.episodes[-1])[2], self.portfolio.getCurrentState()["total_in_usd"]
 
     def runTest(self):
-        # move the market to the test data
+        def getDelta(history):
+            state = self.portfolio.getCurrentState()
+            pChange = history[-1][2] - history[0][2]
+            portfolioDelta = (pChange) / history[0][2]
+            bChange = state["market"].getCurrentMarketInfo()["weighted_price"]-state["initial_bitcoin_price"]
+            bitcoinDelta = (bChange) / state["initial_bitcoin_price"]
+            return bitcoinDelta, portfolioDelta, portfolioDelta - bitcoinDelta, pChange, bChange, state["initial_bitcoin_price"],
+
+
         self.portfolio.reset(self.trainingDataBound, self.trainingDataBound)
+        self.epsilon = 0.001
+
+
+        market = self.portfolio.getCurrentState()["market"]
+        startTimestamp = market.getCurTimestamp()
+
+        length = market.getNumTimestamps() - market.getCurTimestamp()
+        for i in range(int(length) - 1):
+            state = self.portfolio.getCurrentState()
+            action = self.getAction(state)
+            # take the action and increment the market one timestamp
+            self.portfolio.takeAction(action)
+            # observe the next state
+            nextState = self.portfolio.getCurrentState()
+            # get the reward based upon
+            reward = self.rewardFunction(state, nextState)
+            self.update(state, action, nextState, reward)
+        self.episodes.append(self.portfolio.getHistory())
+
+        endTimestamp = market.getCurTimestamp()
+
+
+        # log data
+        with open('results/test.log', 'w') as f:
+            delta = getDelta(self.episodes[-1])
+            f.write("{},{},{},{},{},{},{},{},{}\n".format(delta[0], delta[1], delta[2], delta[3], delta[4], delta[5], self.portfolio.getCurrentState()["total_in_usd"], startTimestamp, endTimestamp))
+        with open('test_history.log', 'w') as f:
+            pickle.dump(self.portfolio.getHistory(), f)
+
+        with open('results/weights_test.txt', 'w') as f:
+            pickle.dump(self.weights, f)
+        return getDelta(self.episodes[-1])[2], self.portfolio.getCurrentState()["total_in_usd"]
+
+
 

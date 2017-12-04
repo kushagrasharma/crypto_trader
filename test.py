@@ -4,11 +4,14 @@ import numpy as np
 
 
 np.random.seed(1337)
-# with open('weights.txt') as f:
-#     weights = pickle.load(f)
+with open('results/weights.txt') as f:
+     weights = pickle.load(f)
 
-q = ApproximateQAgent()#weights=weights)
+q = ApproximateQAgent(weights=weights)
 
-for i in range(100000):
-    
-    print q.runEpisode()
+# print "TRAINING"
+# for i in range(2000):
+#     print "{}    {}".format(i, q.runEpisode())
+
+print "TESTING"
+print q.runTest()
