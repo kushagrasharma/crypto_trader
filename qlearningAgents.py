@@ -126,25 +126,27 @@ class ApproximateQAgent():
         def getDelta(history):
             state = self.portfolio.getCurrentState()
             portfolioDelta = (history[-1][2] - history[0][2]) / history[0][2]
-            bitcoinDelta = (state["market"].getCurrentMarketInfo()["weighted_price"] - state["initial_bitcoin_price"]) / state["initial_bitcoin_price"]
+            bitcoinDelta = (state["market"].getCurrentMarketInfo()["weighted_price"]-state["initial_bitcoin_price"]) / state["initial_bitcoin_price"]
             return bitcoinDelta, portfolioDelta, portfolioDelta - bitcoinDelta
+        try:
 
+            self.portfolio.reset(self.trainingDataBound)
+            for i in range(self.stepsPerEpisode):
+                state = self.portfolio.getCurrentState()
+                action = self.getAction(state)
+                #print action
+                self.portfolio.takeAction(action)
+                nextState = self.portfolio.getCurrentState()
+                reward = self.rewardFunction(self.portfolio.history)#state, action, nextState)
+                self.update(state, action, nextState, reward)
+            self.episodes.append(self.portfolio.getHistory())
+            #print self.weights
+            with open('history.log', 'a+') as f:
+                f.write("{},{}\n".format(getDelta(self.episodes[-1]), self.portfolio.getCurrentState()["total_in_usd"]))
 
-        self.portfolio.reset(self.trainingDataBound)
-        for i in range(self.stepsPerEpisode):
-            state = self.portfolio.getCurrentState()
-            action = self.getAction(state)
-            #print action
-            self.portfolio.takeAction(action)
-            nextState = self.portfolio.getCurrentState()
-            reward = self.rewardFunction(self.portfolio.history)#state, action, nextState)
-            self.update(state, action, nextState, reward)
-        self.episodes.append(self.portfolio.getHistory())
-        #print self.weights
-        with open('history.log', 'a+') as f:
-            f.write("{},{}\n".format(getDelta(self.episodes[-1]), self.portfolio.getCurrentState()["total_in_usd"]))
-
-        with open('weights.txt', 'w') as f:
-            print self.weights
-            pickle.dump(self.weights, f)
-        return getDelta(self.episodes[-1])[2], self.portfolio.getCurrentState()["total_in_usd"]
+            with open('weights.txt', 'w') as f:
+                print self.weights
+                pickle.dump(self.weights, f)
+            return getDelta(self.episodes[-1])[2], self.portfolio.getCurrentState()["total_in_usd"]
+        except:
+            pass

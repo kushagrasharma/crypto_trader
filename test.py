@@ -8,4 +8,5 @@ with open('weights.txt') as f:
 q = ApproximateQAgent(weights=weights)
 
 for i in range(100000):
-	print q.runEpisode()
+    
+    print q.runEpisode()
