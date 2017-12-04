@@ -1,3 +1,4 @@
+import numpy as np
 from portfolio import Portfolio
 from util import *
 from extractors import *
@@ -6,19 +7,26 @@ import json
 import sys
 import pickle
 
+np.random.seed(1337)
+
 class ApproximateQAgent():
     def __init__(self, 
-                 funds=10000, 
+                 funds=10000, # start with 10000 dollars
                  featExtractor=Try2(), 
                  alpha=0.5, 
-                 epsilon=0.05, 
-                 gamma=0.98, 
+                 epsilon=0.05, # initial episolon value
+                 gamma=0.95, # discount rate
                  trainingDataBound=0.8,
-                 stepsPerEpisode=720,
-                 rewardFunction=reward, weights = Counter()):
+                 stepsPerEpisode=288, # 3-day period
+                 rewardFunction=reward,
+                 weights=None):
         self.featExtractor = featExtractor
-        self.weights = np.array(weights)
         self.portfolio = Portfolio(funds)
+        if weights == None:
+            numFeatures = len(self.featExtractor.getFeatures(self.portfolio.getCurrentState(), "hold"))
+            self.weights = np.zeros(numFeatures)
+        else:
+            self.weights = weights
 
         self.rewardFunction = rewardFunction
         self.trainingDataBound = trainingDataBound
@@ -37,27 +45,14 @@ class ApproximateQAgent():
           where * is the dotProduct operator
         """
         features = self.featExtractor.getFeatures(state, action)
-        value = 0
-        try:
-            return features.dot(self.weights)
-        except:
-            pass
-            print "KEY"
-            print key
-            print "FEATURES"
-            print features
-            print "WEIGHTS"
-            print self.weights
-            return
+        return features.dot(self.weights)
 
     def update(self, state, action, nextState, reward):
         """
-           Should update your weights based on transition
+           Update the weights based on the transition
         """
-        "*** YOUR CODE HERE ***"
         difference = reward + self.discount * self.getValue(nextState) - self.getQValue(state, action)
         features = self.featExtractor.getFeatures(state, action)
-        #print self.weights
         self.weights += self.alpha * difference * features
         self.weights /= np.mean(self.weights)
 
@@ -66,9 +61,8 @@ class ApproximateQAgent():
           Returns max_action Q(state,action)
           where the max is over legal actions.  Note that if
           there are no legal actions, which is the case at the
-          terminal state, you should return a value of 0.0.
+          terminal state, this returns a value of 0.0.
         """
-        "*** YOUR CODE HERE ***"
         actions = self.getLegalActions(state)
         if not actions:
             return 0.0
@@ -84,16 +78,12 @@ class ApproximateQAgent():
           take the best policy action otherwise.  Note that if there are
           no legal actions, which is the case at the terminal state, you
           should choose None as the action.
-
-          HINT: You might want to use util.flipCoin(prob)
-          HINT: To pick randomly from a list, use random.choice(list)
         """
-        "*** YOUR CODE HERE ***"
         legalActions = self.getLegalActions(state)
         if not legalActions:
             return None
         if flipCoin(self.epsilon):
-            return random.choice(legalActions)
+            return np.random.choice(legalActions)
         return self.computeActionFromQValues(state)
 
     def computeActionFromQValues(self, state):
@@ -102,12 +92,10 @@ class ApproximateQAgent():
           are no legal actions, which is the case at the terminal state,
           you should return None.
         """
-        "*** YOUR CODE HERE ***"
         actions = self.getLegalActions(state)
         if not actions:
             return None
         qValueActionPairs = [(action, self.getQValue(state, action)) for action in actions]
-        #print qValueActionPairs
         maxActions = [qValueActionPairs[0][0]]
         maxQValue = qValueActionPairs[0][1]
         for action, qValue in qValueActionPairs:
@@ -116,8 +104,7 @@ class ApproximateQAgent():
             elif qValue > maxQValue:
                 maxActions = [action]
                 maxQValue = qValue
-        #print maxActions
-        return random.choice(maxActions)
+        return np.random.choice(maxActions)
 
     def getValue(self, state):
         return self.computeValueFromQValues(state)
@@ -129,22 +116,28 @@ class ApproximateQAgent():
             bitcoinDelta = (state["market"].getCurrentMarketInfo()["weighted_price"] - state["initial_bitcoin_price"]) / state["initial_bitcoin_price"]
             return bitcoinDelta, portfolioDelta, portfolioDelta - bitcoinDelta
 
+        # randomly select a starting point in the training data
+        self.portfolio.reset(0, self.trainingDataBound)
 
-        self.portfolio.reset(self.trainingDataBound)
         for i in range(self.stepsPerEpisode):
             state = self.portfolio.getCurrentState()
             action = self.getAction(state)
-            #print action
+            # take the action and increment the market one timestamp
             self.portfolio.takeAction(action)
+            # observe the next state
             nextState = self.portfolio.getCurrentState()
-            reward = self.rewardFunction(self.portfolio.history)#state, action, nextState)
+            # get the reward based upon
+            reward = self.rewardFunction(state, nextState)
             self.update(state, action, nextState, reward)
         self.episodes.append(self.portfolio.getHistory())
-        #print self.weights
         with open('history.log', 'a+') as f:
-            f.write("{},{}\n".format(getDelta(self.episodes[-1]), self.portfolio.getCurrentState()["total_in_usd"]))
+            delta = getDelta(self.episodes[-1])
+            f.write("{},{},{},{}\n".format(delta[0], delta[1], delta[2], self.portfolio.getCurrentState()["total_in_usd"]))
 
         with open('weights.txt', 'w') as f:
-            print self.weights
             pickle.dump(self.weights, f)
         return getDelta(self.episodes[-1])[2], self.portfolio.getCurrentState()["total_in_usd"]
+
+    def runTest(self):
+        # move the market to the test data
+        self.portfolio.reset(self.trainingDataBound, self.trainingDataBound)
