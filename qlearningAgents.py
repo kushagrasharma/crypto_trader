@@ -4,6 +4,7 @@ from extractors import *
 from reward import *
 import json
 import sys
+import pickle
 
 class ApproximateQAgent():
     def __init__(self, 
@@ -16,7 +17,7 @@ class ApproximateQAgent():
                  stepsPerEpisode=720,
                  rewardFunction=reward, weights = Counter()):
         self.featExtractor = featExtractor
-        self.weights = weights
+        self.weights = np.array(weights)
         self.portfolio = Portfolio(funds)
 
         self.rewardFunction = rewardFunction
@@ -37,19 +38,17 @@ class ApproximateQAgent():
         """
         features = self.featExtractor.getFeatures(state, action)
         value = 0
-        for key in features:
-            try:
-                value += features[key] * self.weights[key]
-            except:
-                pass
-                print "KEY"
-                print key
-                print "FEATURES"
-                print features
-                print "WEIGHTS"
-                print self.weights
-                return
-        return value
+        try:
+            return features.dot(self.weights)
+        except:
+            pass
+            print "KEY"
+            print key
+            print "FEATURES"
+            print features
+            print "WEIGHTS"
+            print self.weights
+            return
 
     def update(self, state, action, nextState, reward):
         """
@@ -59,10 +58,8 @@ class ApproximateQAgent():
         difference = reward + self.discount * self.getValue(nextState) - self.getQValue(state, action)
         features = self.featExtractor.getFeatures(state, action)
         #print self.weights
-        for key in features:
-            self.weights[key] += self.alpha * difference * features[key]
-            
-            self.weights[key] *= .000000000000000000001
+        self.weights += self.alpha * difference * features
+        self.weights /= np.mean(self.weights)
 
     def computeValueFromQValues(self, state):
         """
@@ -147,7 +144,7 @@ class ApproximateQAgent():
         with open('history.log', 'a+') as f:
             f.write("{},{}\n".format(getDelta(self.episodes[-1]), self.portfolio.getCurrentState()["total_in_usd"]))
 
-        with open('weights.json', 'w') as f:
+        with open('weights.txt', 'w') as f:
             print self.weights
-            json.dump(self.weights, f)
+            pickle.dump(self.weights, f)
         return getDelta(self.episodes[-1])[2], self.portfolio.getCurrentState()["total_in_usd"]

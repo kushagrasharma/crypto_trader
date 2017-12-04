@@ -1,8 +1,9 @@
 from qlearningAgents import ApproximateQAgent
-import json
+import pickle
+import numpy as np
 
-with open('weights.json') as json_data:
-    weights = json.load(json_data)
+with open('weights.txt') as f:
+    weights = pickle.load(f)
 
 q = ApproximateQAgent(weights=weights)
 
