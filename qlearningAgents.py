@@ -61,7 +61,8 @@ class ApproximateQAgent():
         features = self.featExtractor.getFeatures(state, action)
         for key in features:
             self.weights[key] += self.alpha * difference * features[key]
-            self.weights[key] *= .001
+        
+            #self.weights[key] *= .000000000000001
 
     def computeValueFromQValues(self, state):
         """
@@ -143,5 +144,6 @@ class ApproximateQAgent():
             self.update(state, action, nextState, reward)
         self.episodes.append(self.portfolio.getHistory())
         with open('weights.json', 'w') as f:
+            print self.weights
             json.dump(self.weights, f)
         return getDelta(self.episodes[-1]), self.portfolio.getCurrentState()["total_in_usd"]

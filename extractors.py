@@ -56,6 +56,7 @@ class Try1(FeatureExtractor):
 		market = state["market"].getCurrentMarketInfo()
 		past15 = state["market"].getPastMarketInfo(15)
 		pastDay = state["market"].getPastMarketInfo(1440)
+
 		return {
 			"1" : willr(state, action),
 			"2" : rocr(state, action, 15),
@@ -85,7 +86,7 @@ class Try2(FeatureExtractor):
 			"8" : {"buy" : 3, "hold" : 2, "sell" : 1}[action],
 			"9": market["weighted_price"] - pastHour["weighted_price"],
 			"10": market["weighted_price"] - pastDay["weighted_price"],
-			"11" : market.std,
+			"11" : market['std'],
 			"12" : market.tsf,
 		}
 

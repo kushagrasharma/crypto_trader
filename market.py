@@ -6,7 +6,7 @@ from copy import copy, deepcopy
 
 
 class BitcoinMarket():
-	def __init__(self, fileName="15min_fulldata.csv"):
+	def __init__(self, fileName="15min_fulldata_normalized.csv"):
 		self.marketData = pd.read_csv(fileName, parse_dates=True) 
 		self.marketData.dropna()
 		self.marketData.reset_index(level=0, inplace=True)
