@@ -10,4 +10,5 @@ np.random.seed(1337)
 q = ApproximateQAgent()#weights=weights)
 
 for i in range(100000):
-	print q.runEpisode()
+    
+    print q.runEpisode()

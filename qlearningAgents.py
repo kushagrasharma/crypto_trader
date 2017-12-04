@@ -113,8 +113,9 @@ class ApproximateQAgent():
         def getDelta(history):
             state = self.portfolio.getCurrentState()
             portfolioDelta = (history[-1][2] - history[0][2]) / history[0][2]
-            bitcoinDelta = (state["market"].getCurrentMarketInfo()["weighted_price"] - state["initial_bitcoin_price"]) / state["initial_bitcoin_price"]
+            bitcoinDelta = (state["market"].getCurrentMarketInfo()["weighted_price"]-state["initial_bitcoin_price"]) / state["initial_bitcoin_price"]
             return bitcoinDelta, portfolioDelta, portfolioDelta - bitcoinDelta
+        try:
 
         # randomly select a starting point in the training data
         self.portfolio.reset(0, self.trainingDataBound)
@@ -141,3 +142,4 @@ class ApproximateQAgent():
     def runTest(self):
         # move the market to the test data
         self.portfolio.reset(self.trainingDataBound, self.trainingDataBound)
+
