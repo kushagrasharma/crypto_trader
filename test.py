@@ -6,6 +6,5 @@ with open('weights.json') as json_data:
 
 q = ApproximateQAgent(weights=weights)
 
-
-for i in range(500000):
+for i in range(100000):
 	print q.runEpisode()
