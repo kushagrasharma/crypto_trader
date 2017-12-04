@@ -29,27 +29,15 @@ class BasicFeatureExtractor(FeatureExtractor):
 		market = state["market"].getCurrentMarketInfo()
 		past15 = state["market"].getPastMarketInfo(15)
 		pastDay = state["market"].getPastMarketInfo(1440)
-		features = {
-			# "volatility": market["high"] - market["low"],
-			# "volume_btc": market["volume_btc"],
-			# "volume_currency": market["volume_currency"],
-			"delta_15_minutes": market["weighted_price"] - past15["weighted_price"],
-			"delta_24_hours": market["weighted_price"] - pastDay["weighted_price"],
+		d = {
+			"volatility": market["high"] - market["low"],
+			"volume_currency": market["volume_currency"],
+			"delta_15_minutes": market["weighted_price"] - past15["weighted_price"] * state["bitcoin"],
+			"delta_24_hours": market["weighted_price"] - pastDay["weighted_price"] * state["bitcoin"],
 			"willr" : (market["high"] - market["close"]) / (market["high"] - market["low"]) * 100,
 			"action": {"buy" : 3, "hold" : 2, "sell" : 1}[action]
 		}
-		return features
-
-
-class MarketFeatureExtractor(FeatureExtractor):
-	def getFeatures(state, action):
-		market = state["market"]
-		# list of market data for current and past 10 timestamps
-		marketData = [market.getPastMarketInfo(x) for x in range(11)]
-		# Compute deltas TODO
-		return None
-
-
+		return np.array([d[str(i)] for i in d])
 
 class Try1(FeatureExtractor):
 	def getFeatures(self, state, action):
@@ -78,8 +66,8 @@ class Try2(FeatureExtractor):
 			"1" : market.rsi,
 			"2" : market.willr,
 			"3" : market.dema,
-			"4" : market.chaikinOscillator,
-			"5" : market.chaikinLine,
+			#"4" : market.chaikinOscillator,
+			#"5" : market.chaikinLine,
 			"6" : market.trueRange,
 			"7" : market.linearRegSlope,
 			"8" : {"buy" : 3, "hold" : 2, "sell" : 1}[action],
@@ -88,7 +76,7 @@ class Try2(FeatureExtractor):
 			"11" : market["std"],
 			"12" : market.tsf,
 		}
-		return np.array([d[str(i)] for i in range(1, len(d) + 1)])
+		return np.array([d[str(i)] for i in d])
 
 
 # """

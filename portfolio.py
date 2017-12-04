@@ -1,7 +1,7 @@
 from market import BitcoinMarket
 
 class Portfolio():
-	def __init__(self, funds=1000, bitcoin=0):
+	def __init__(self, funds=10000, bitcoin=0):
 		self.market = BitcoinMarket()
 		self.originalFunds = funds
 		self.funds = funds
@@ -94,13 +94,14 @@ class Portfolio():
 		self.history.append(["hold", 0, state["total_in_usd"]])
 		return True
 
-	def reset(self, upperbound):
+	def reset(self, lowerbound, upperbound):
 		"""
 			Resets portfolio, picks random start time
 		"""
 		self.funds = self.originalFunds
 		self.bitcoin = 0
 		self.history = []
-		self.market.setSampledTimestamp(0, upperbound)
+
+		self.market.setSampledTimestamp(lowerbound, upperbound)
 		self.initial_bitcoin_price = self.market.getCurrentMarketInfo()["weighted_price"]
 
