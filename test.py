@@ -10,7 +10,7 @@ np.random.seed(1337)
 #print "TESTING"
 #print q.runTest()
 
-feature_sets = [Try2]
+feature_sets = [Try1]
 
 for feature_set in feature_sets:
     q = ApproximateQAgent(featExtractor=feature_set)

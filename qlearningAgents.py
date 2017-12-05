@@ -219,4 +219,3 @@ class ApproximateQAgent():
         test.to_csv("results/" + "test_" + self.featExtractor.__class__.__name__ + '.csv')
         return training, test
 
-
