@@ -6,12 +6,13 @@ from reward import *
 import json
 import sys
 import pickle
+import os
 
 # seed the random number generator so that we can duplicate the results
 np.random.seed(1337)
 
 class ApproximateQAgent():
-    def __init__(self, 
+    def __init__(self, weightPath=None,
                  funds=10000, # start with 10000 dollars
                  featExtractor=Try2(), 
                  alpha=0.5, 
@@ -19,16 +20,21 @@ class ApproximateQAgent():
                  gamma=0.90, # discount rate
                  trainingDataBound=0.90,
                  stepsPerEpisode=288, # 3-day period
-                 rewardFunction=reward,
-                 weights=None):
-        self.featExtractor = featExtractor
+                 rewardFunction=reward):
+        self.featExtractor = featExtractor()
         self.portfolio = Portfolio(funds)
-        # if not weights:
-        #     numFeatures = len(self.featExtractor.getFeatures(self.portfolio.getCurrentState(), "hold"))
-        #     self.weights = np.zeros(numFeatures)
-        # else:
-        self.weights = weights
-
+        if not weightPath:
+            self.weightPath = "results/" + str(featExtractor)[11:]
+            if os.path.isfile(self.weightPath):
+                with open(self.weightPath) as f:
+                    self.weights = pickle.load(f)
+            else:
+                numFeatures = len(self.featExtractor.getFeatures(self.portfolio.getCurrentState(), "hold"))
+                self.weights = np.random.randn(numFeatures)
+        else:
+            self.weightPath = weightPath
+            with open(weightPath) as f:
+                self.weights = pickle.load(f)
         self.rewardFunction = rewardFunction
         self.trainingDataBound = trainingDataBound
         self.stepsPerEpisode = stepsPerEpisode
@@ -136,14 +142,14 @@ class ApproximateQAgent():
         self.episodes.append(self.portfolio.getHistory())
         # decrement epsilon as we progress in training
         # self.epsilon *= 0.9
-        print self.weights
+        #print self.weights
 
         # log data
         with open('results/train.log', 'a+') as f:
             delta = getDelta(self.episodes[-1])
             f.write("{},{},{},{},{},{},{}\n".format(delta[0], delta[1], delta[2], delta[3], delta[4], delta[5], self.portfolio.getCurrentState()["total_in_usd"]))
 
-        with open('results/weights.txt', 'w') as f:
+        with open(self.weightPath, 'w') as f:
             pickle.dump(self.weights, f)
         self.weights.tofile('results/weight_history.csv',sep=',',format='%10.5f')
         return getDelta(self.episodes[-1])[2], self.portfolio.getCurrentState()["total_in_usd"]
@@ -188,9 +194,23 @@ class ApproximateQAgent():
         with open('test_history.log', 'w') as f:
             pickle.dump(self.portfolio.getHistory(), f)
 
-        with open('results/weights_test.txt', 'w') as f:
+        with open(self.weightPath, 'w') as f:
             pickle.dump(self.weights, f)
         return getDelta(self.episodes[-1])[2], self.portfolio.getCurrentState()["total_in_usd"]
 
+    def trainAgent(self, n_iter = 100):
+        training = []
+        for i in range(n_iter):
+            g = [i] + list(self.runEpisode())
+            print(g)
+            training.append(copy.deepcopy(g))
+        return pd.DataFrame(training, columns=['iteration', 'returns', 'asset_value']).set_index('iteration', inplace=False)
+
+    def testAndTrain(self, n_iter=100):
+        print "TRAINING"
+        training = agent.trainAgent(n_iter=n_iter)
+        training.to_csv("results/" + "train_" + self.featExtractor.__class__.__name__ + '.csv')
+        print "TESTING"
+        return agent.runTest()
 
 

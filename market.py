@@ -21,14 +21,14 @@ class BitcoinMarket():
 			Returns a dictionary of the current market information.
 			Available fields include the fields in the given csv
 		"""
-		return copy(self.marketData.loc[self.curTimestamp])
+		return copy(self.marketData.loc[int(self.curTimestamp)])
 
 	def getPastMarketInfo(self, timeDelta):
 		"""
 			Returns the market info timeDelta timestamps before
 		"""
 		if self.curTimestamp - timeDelta >= 0:
-			return deepcopy(self.marketData.loc[self.curTimestamp - timeDelta])
+			return deepcopy(self.marketData.loc[int(self.curTimestamp - timeDelta)])
 		else:
 			# If we have an invalid index, return the first datapoint
 			return deepcopy(self.marketData.loc[0])
