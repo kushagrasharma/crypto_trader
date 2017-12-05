@@ -7,6 +7,7 @@ import json
 import sys
 import pickle
 import os
+import copy
 
 # seed the random number generator so that we can duplicate the results
 np.random.seed(1337)
@@ -208,9 +209,7 @@ class ApproximateQAgent():
 
     def testAndTrain(self, n_iter=100):
         print "TRAINING"
-        training = agent.trainAgent(n_iter=n_iter)
+        training = self.trainAgent(n_iter=n_iter)
         training.to_csv("results/" + "train_" + self.featExtractor.__class__.__name__ + '.csv')
         print "TESTING"
         return agent.runTest()
-
-

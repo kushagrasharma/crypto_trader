@@ -71,13 +71,13 @@ class Try2(FeatureExtractor):
 		pastHour = state["market"].getPastMarketInfo(4)
 		pastDay = state["market"].getPastMarketInfo(4*24)
 		d = {
-			"1" : market.rsi,
-			"2" : market.willr,
-			"3" : market.dema,
+			"1" : market.rsi4Hours,
+			"2" : market.willr4Hours,
+			"3" : market.dema4Hours,
 			#"4" : market.chaikinOscillator,
 			#"5" : market.chaikinLine,
-			"6" : market.trueRange,
-			"7" : market.linearRegSlope,
+			"6" : market.trueRange4Hours,
+			"7" : market.linearRegSlope4Hours,
 			"8" : {"buy" : 3, "hold" : 2, "sell" : 1}[action],
 			"9": market["weighted_price"] - pastHour["weighted_price"],
 			"10": market["weighted_price"] - pastDay["weighted_price"],
