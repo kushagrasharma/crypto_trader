@@ -94,10 +94,6 @@ class Try3(FeatureExtractor):
 		pastWeek = state["market"].getPastMarketInfo(4*24*7)
 
 
-
-
-
-
 # """
 # def willr(state, action):
 # 	"""

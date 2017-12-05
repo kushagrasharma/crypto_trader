@@ -14,5 +14,5 @@ feature_sets = [Try2]
 
 for feature_set in feature_sets:
     q = ApproximateQAgent(featExtractor=feature_set)
-    test = q.testAndTrain(n_iter=2000)
-    print test
+    test = q.testAndTrain(n_train=2000, n_test=100)
+    
