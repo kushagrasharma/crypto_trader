@@ -7,12 +7,6 @@ import copy
 
 np.random.seed(1337)
 
-
-
-# print "TRAINING"
-# for i in range(2000):
-#     print "{}    {}".format(i, q.runEpisode())
-
 #print "TESTING"
 #print q.runTest()
 

@@ -8,7 +8,7 @@ class FeatureExtractor():
 		raise NotImplementedError
 
 
-class BasicFeatureExtractor(FeatureExtractor):
+class Try0(FeatureExtractor):
 	def getFeatures(self, state, action):
 		"""
 			state is a dictionary of the current portfolio and market information.
@@ -27,35 +27,43 @@ class BasicFeatureExtractor(FeatureExtractor):
 		    	- total
 		"""
 		market = state["market"].getCurrentMarketInfo()
-		past15 = state["market"].getPastMarketInfo(15)
-		pastDay = state["market"].getPastMarketInfo(1440)
+		past15 = state["market"].getPastMarketInfo(1)
+		pastDay = state["market"].getPastMarketInfo(96)
 		d = {
 			"volatility": market["high"] - market["low"],
-			"volume_currency": market["volume_currency"],
-			"delta_15_minutes": market["weighted_price"] - past15["weighted_price"] * state["bitcoin"],
-			"delta_24_hours": market["weighted_price"] - pastDay["weighted_price"] * state["bitcoin"],
-			"willr" : (market["high"] - market["close"]) / (market["high"] - market["low"]) * 100,
-			"action": {"buy" : 3, "hold" : 2, "sell" : 1}[action]
+			"volume_btc_delta_15_minutes": market["volume_btc"] - past15["volume_btc"],
+			"volume_btc_delta_24_hours": market["volume_btc"] - pastDay["volume_btc"],
+			"price_delta_15_minutes": market["weighted_price"] - past15["weighted_price"] * state["bitcoin"],
+			"price_delta_24_hours": market["weighted_price"] - pastDay["weighted_price"] * state["bitcoin"],
+			"willr" : market["willr4Hours"],
 		}
 		return np.array([d[str(i)] for i in d])
 
 class Try1(FeatureExtractor):
 	def getFeatures(self, state, action):
 		market = state["market"].getCurrentMarketInfo()
-		past15 = state["market"].getPastMarketInfo(15)
-		pastDay = state["market"].getPastMarketInfo(1440)
-		return {
-			"1" : willr(state, action),
-			"2" : rocr(state, action, 15),
-			"3" : rocr(state, action, 60),
-			"4" : rocr(state, action, 1440),
-			"5" : momentum(state, action, 15),
-			"6" : momentum(state, action, 60),
-			"7" : momentum(state, action, 1440),
-			"8" : {"buy" : 3, "hold" : 2, "sell" : 1}[action],
-			"9": market["weighted_price"] - past15["weighted_price"],
-			"10": market["weighted_price"] - pastDay["weighted_price"]
+		past15 = state["market"].getPastMarketInfo(1)
+		pastDay = state["market"].getPastMarketInfo(96)
+		d = {
+			1: market["willr4Hours"],
+			2: market["willr4Days"],
+			3: market["willrWeek"],
+			3: market["tema4Hours"],
+			4: market["tema4Days"],
+			5: market["temaWeek"],
+			6: market["rsi4Hours"],
+			7: market["rsi4Days"],
+			8: market["rsiWeek"],
+			9: market["trueRange4Hours"],
+			10: market["trueRange4Days"],
+			11: market["trueRangeWeek"],
+			12: market["linearRegSlope4Hours"],
+			13: market["linearRegSlope4Days"],
+			14: market["linearRegSlopeWeek"],
+			15: market["weighted_price"] - past15["weighted_price"] * state["bitcoin"],
+			16: market["weighted_price"] - pastDay["weighted_price"] * state["bitcoin"],
 		}
+		return np.array([d[i] for i in d])
 
 class Try2(FeatureExtractor):
 	def getFeatures(self, state, action):
@@ -77,6 +85,17 @@ class Try2(FeatureExtractor):
 			"12" : market.tsf,
 		}
 		return np.array([d[str(i)] for i in d])
+
+class Try3(FeatureExtractor):
+	def getFeatures(self, state, action):
+		market = state["market"].getCurrentMarketInfo()
+		pastHour = state["market"].getPastMarketInfo(4)
+		pastDay = state["market"].getPastMarketInfo(4*24)
+		pastWeek = state["market"].getPastMarketInfo(4*24*7)
+
+
+
+
 
 
 # """

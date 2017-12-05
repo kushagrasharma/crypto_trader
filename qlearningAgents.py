@@ -14,9 +14,9 @@ np.random.seed(1337)
 class ApproximateQAgent():
     def __init__(self, weightPath=None,
                  funds=10000, # start with 10000 dollars
-                 featExtractor=Try2(), 
+                 featExtractor=Try1(), 
                  alpha=0.5, 
-                 epsilon=0.05, # initial episolon value
+                 epsilon=0.05, # initial epsilon value
                  gamma=0.90, # discount rate
                  trainingDataBound=0.90,
                  stepsPerEpisode=288, # 3-day period
