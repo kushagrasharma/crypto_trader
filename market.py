@@ -6,7 +6,7 @@ from copy import copy, deepcopy
 
 
 class BitcoinMarket():
-	def __init__(self, fileName="15min_fulldata.csv"):
+	def __init__(self, fileName="15min_manyFeatures.csv"):
 		self.marketData = pd.read_csv(fileName, parse_dates=True) 
 		# remove any entries that don't have all features defined (i.e. first 30)
 		self.marketData.dropna()

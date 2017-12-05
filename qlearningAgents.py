@@ -13,9 +13,9 @@ np.random.seed(1337)
 class ApproximateQAgent():
     def __init__(self, 
                  funds=10000, # start with 10000 dollars
-                 featExtractor=Try2(), 
+                 featExtractor=Try1(), 
                  alpha=0.5, 
-                 epsilon=0.05, # initial episolon value
+                 epsilon=0.05, # initial epsilon value
                  gamma=0.90, # discount rate
                  trainingDataBound=0.90,
                  stepsPerEpisode=288, # 3-day period
@@ -23,11 +23,11 @@ class ApproximateQAgent():
                  weights=None):
         self.featExtractor = featExtractor
         self.portfolio = Portfolio(funds)
-        # if not weights:
-        #     numFeatures = len(self.featExtractor.getFeatures(self.portfolio.getCurrentState(), "hold"))
-        #     self.weights = np.zeros(numFeatures)
+        if not weights:
+            numFeatures = len(self.featExtractor.getFeatures(self.portfolio.getCurrentState(), "hold"))
+            self.weights = np.zeros(numFeatures)
         # else:
-        self.weights = weights
+        #self.weights = weights
 
         self.rewardFunction = rewardFunction
         self.trainingDataBound = trainingDataBound
