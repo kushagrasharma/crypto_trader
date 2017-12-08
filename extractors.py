@@ -59,8 +59,8 @@ class Try1(FeatureExtractor):
 			12: market["linearRegSlope4Hours"],
 			13: market["linearRegSlope4Days"],
 			14: market["linearRegSlopeWeek"],
-			15: market["weighted_price"] - past15["weighted_price"] * state["bitcoin"],
-			16: market["weighted_price"] - pastDay["weighted_price"] * state["bitcoin"],
+			15: market["weighted_price"] - past15["weighted_price"],
+			16: market["weighted_price"] - pastDay["weighted_price"],
 		}
 		return np.array([d[i] for i in d])
 
@@ -93,6 +93,38 @@ class Try3(FeatureExtractor):
 		pastWeek = state["market"].getPastMarketInfo(4*24*7)
 
 
+class KNearestNeighborsExtractor(FeatureExtractor):
+	def getFeatures(self, row):
+		d = {
+			1: row["willr4Hours"],
+			2: row["willr4Days"],
+			3: row["willrWeek"],
+
+			3: row["tema4Hours"],
+			4: row["tema4Days"],
+			5: row["temaWeek"],
+
+			6: row["rsi4Hours"],
+			7: row["rsi4Days"],
+			8: row["rsiWeek"],
+
+			9: row["trueRange4Hours"],
+			10: row["trueRange4Days"],
+			11: row["trueRangeWeek"],
+
+			12: row["linearRegSlope4Hours"],
+			13: row["linearRegSlope4Days"],
+			14: row["linearRegSlopeWeek"],
+
+			15: row["tsf4Hours"],
+			16: row["tsf4Days"],
+			17: row["tsfWeek"],
+
+			18: row["std4Hours"],
+
+			19: row["weighted_price"],
+		}
+		return np.array([d[i] for i in d])
 # """
 # def willr(state, action):
 # 	"""

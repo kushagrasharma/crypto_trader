@@ -214,7 +214,7 @@ class ApproximateQAgent():
         print "TESTING"
         test = []
         for i in range(n_test):
-            test.append(agent.runTest())
+            test.append(self.runTest())
         test = pd.DataFrame(test, columns=['returns', 'asset_value'])
         test.to_csv("results/" + "test_" + self.featExtractor.__class__.__name__ + '.csv')
         return training, test
