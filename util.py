@@ -1,3 +1,5 @@
+# Helper functions taken from the Berkeley Pacman source code.
+
 import random 
 
 def flipCoin( p ):

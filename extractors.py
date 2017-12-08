@@ -2,27 +2,21 @@ import pandas as pd
 import numpy as np
 import time
 
+# Abstract class to define what a feature extractor should look like
 class FeatureExtractor():
 	def getFeatures(state, action):
 		raise NotImplementedError
 
 
+# A trivial first attempt at feature selection
 class Try0(FeatureExtractor):
 	def getFeatures(self, state, action):
 		"""
 			state is a dictionary of the current portfolio and market information.
 			Available fields include:
-		    	- id
-		    	- timestamp
-		    	- open
-		    	- high
-		    	- low
-		    	- close
-		    	- volume_btc
-		    	- volume_currency
-		    	- weighted_price 
+		    	- market (a market object as defined in market.py)
 		    	- funds
-		    	- num_bitcoins
+		    	- bitcoin
 		    	- total
 		"""
 		market = state["market"].getCurrentMarketInfo()
@@ -38,6 +32,9 @@ class Try0(FeatureExtractor):
 		}
 		return np.array([d[str(i)] for i in d])
 
+
+# first try at selecting a feature set.  Here we use all of the features we computed 
+# during the preprocessing phase.
 class Try1(FeatureExtractor):
 	def getFeatures(self, state, action):
 		market = state["market"].getCurrentMarketInfo()
@@ -64,6 +61,9 @@ class Try1(FeatureExtractor):
 		}
 		return np.array([d[i] for i in d])
 
+
+
+# A second try at selecting a feature set.  Here we use a subset of the features used in Try1
 class Try2(FeatureExtractor):
 	def getFeatures(self, state, action):
 		market = state["market"].getCurrentMarketInfo()
@@ -73,8 +73,10 @@ class Try2(FeatureExtractor):
 			"1" : market.rsi4Hours,
 			"2" : market.willr4Hours,
 			"3" : market.dema4Hours,
-			#"4" : market.chaikinOscillator,
-			#"5" : market.chaikinLine,
+			# We found that these two metrics dominanted the Q-function in terms of weights and values,
+			# so we removed them to hopefully get more accurate approximations
+			# "4" : market.chaikinOscillator,
+			# "5" : market.chaikinLine,
 			"6" : market.trueRange4Hours,
 			"7" : market.linearRegSlope4Hours,
 			"8" : {"buy" : 3, "hold" : 2, "sell" : 1}[action],
@@ -85,92 +87,32 @@ class Try2(FeatureExtractor):
 		}
 		return np.array([d[str(i)] for i in d])
 
-class Try3(FeatureExtractor):
-	def getFeatures(self, state, action):
-		market = state["market"].getCurrentMarketInfo()
-		pastHour = state["market"].getPastMarketInfo(4)
-		pastDay = state["market"].getPastMarketInfo(4*24)
-		pastWeek = state["market"].getPastMarketInfo(4*24*7)
 
 
+# Same feature extractor as Try1, but modified to work nicer with the 
+# K Nearest Neighbors Algorithm
 class KNearestNeighborsExtractor(FeatureExtractor):
 	def getFeatures(self, row):
 		d = {
 			1: row["willr4Hours"],
 			2: row["willr4Days"],
 			3: row["willrWeek"],
-
 			3: row["tema4Hours"],
 			4: row["tema4Days"],
 			5: row["temaWeek"],
-
 			6: row["rsi4Hours"],
 			7: row["rsi4Days"],
 			8: row["rsiWeek"],
-
 			9: row["trueRange4Hours"],
 			10: row["trueRange4Days"],
 			11: row["trueRangeWeek"],
-
 			12: row["linearRegSlope4Hours"],
 			13: row["linearRegSlope4Days"],
 			14: row["linearRegSlopeWeek"],
-
 			15: row["tsf4Hours"],
 			16: row["tsf4Days"],
 			17: row["tsfWeek"],
-
 			18: row["std4Hours"],
-
 			19: row["weighted_price"],
 		}
 		return np.array([d[i] for i in d])
-# """
-# def willr(state, action):
-# 	"""
-# 		#Determines where today's closing price fell within the range on past 10-day's transaction. 
-# 	"""
-# 	market = state["market"]
-# 	cur = market.getCurrentMarketInfo()
-# 	past = [market.getPastMarketInfo(i) for i in range(10)]
-# 	high = max([x["high"] for x in past])
-# 	low = min([x["low"] for x in past])
-# 	if high - low == 0:
-# 		return 0
-# 	return (high - cur["close"]) / (high - low) * 100
-
-# def rocr(state, action, n):
-# 	"""
-# 		#Compute rate of change relative to previous trading intervals
-# 	"""
-# 	market = state["market"].getCurrentMarketInfo()
-# 	pastN = state["market"].getPastMarketInfo(n)
-# 	return (market["weighted_price"] / pastN["weighted_price"]) * 100
-
-# def momentum(state, action, n):
-# 	"""
-# 		#Measures the change in price
-# 	"""
-# 	market = state["market"]
-# 	cur = market.getCurrentMarketInfo()
-# 	past = market.getPastMarketInfo(n)
-# 	return cur["weighted_price"] - past["weighted_price"]
-
-# def RSI_self(state, window_length=14, libr=False):
-# 	pasts = []
-# 	for i in range(window_length, 0, -1):
-# 		pasts.append(state["market"].getPastMarketInfo(1440*i).close)
-# 	pasts.append(state['market'].getCurrentMarketInfo().close)
-# 	return RSI(pd.DataFrame(pasts, index=np.arange(len(pasts)), columns=['close']), timeperiod=window_length).iloc[-1]
-# """
-def aggregate(data):
-    data.sort_values('timestamp')
-    agged = {'timestamp' : data.iloc[0].timestamp, 
-             'high' : np.max(data.high),
-             'low' : np.min(data.low),
-             'close' : data.iloc[-1].close,
-             'open' : data.iloc[0].open,
-             'volume_btc' : np.sum(data.volume_btc),
-             'volume_currency' : np.sum(data.volume_currency)}
-    agged['weighted_price'] = np.mean([agged['high'], agged['low'], agged['close'], agged['open']])
-    return pd.DataFrame(agged, index=[0], columns=['timestamp', 'high', 'low', 'close', 'open', 'volume_btc', 'volume_currency'])

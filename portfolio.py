@@ -34,8 +34,10 @@ class Portfolio():
 	def getLegalActions(self, state):
 		# In any state, you are always allowed to do nothing
 		actions = ["hold"]
+		# allowed to buy whenever you have funds
 		if self.funds > 0:
 			actions.append("buy")
+		# allowed to sell whenever you have bitcoin
 		if self.bitcoin > 0:
 			actions.append("sell")
 		return actions
@@ -72,7 +74,7 @@ class Portfolio():
 
 	def sell(self):
 		"""
-			Sells all bitcoin and increments time one step
+			Sells all bitcoin and increments market time one step
 		"""
 		if self.bitcoin == 0:
 			return False
@@ -87,7 +89,7 @@ class Portfolio():
 
 	def hold(self):
 		"""
-			Holds portfolio the same and increments time one step
+			Holds portfolio the same and increments market time one step
 		"""
 		self.market.incrementTime()
 		state = self.getCurrentState()
@@ -96,7 +98,7 @@ class Portfolio():
 
 	def reset(self, lowerbound, upperbound):
 		"""
-			Resets portfolio, picks random start time
+			Resets portfolio, picks random start time for the market
 		"""
 		self.funds = self.originalFunds
 		self.bitcoin = 0
